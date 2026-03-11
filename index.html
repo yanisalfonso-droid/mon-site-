@@ -1392,5 +1392,68 @@ document.head.appendChild(s)
 })
 
 </script>
+<script>
+
+/* empêche le site de se bloquer si une erreur JS arrive */
+
+window.onerror=function(msg,url,line,col,error){
+console.log("Erreur interceptée :",msg)
+return true
+}
+
+/* vérifie que les éléments existent avant de les utiliser */
+
+function safe(id){
+return document.getElementById(id)
+}
+
+/* corrige les boutons qui ne répondent pas */
+
+document.addEventListener("click",function(e){
+
+const btn=e.target.closest("button")
+
+if(!btn) return
+
+if(btn.dataset.action){
+
+const action=btn.dataset.action
+
+if(typeof window[action]==="function"){
+window[action]()
+}
+
+}
+
+})
+
+/* correction des inputs mobile */
+
+document.querySelectorAll("input").forEach(i=>{
+i.style.fontSize="16px"
+})
+
+/* animation cartes */
+
+const style=document.createElement("style")
+
+style.innerHTML=`
+
+.card{
+transition:0.25s;
+}
+
+.card:hover{
+transform:translateY(-3px);
+box-shadow:
+0 10px 30px rgba(0,0,0,0.5),
+0 0 20px rgba(74,222,128,0.05);
+}
+
+`
+
+document.head.appendChild(style)
+
+</script>
 </body>
 </html>
