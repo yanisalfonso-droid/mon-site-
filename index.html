@@ -1,14 +1,1372 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Mon App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life OS — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-base: #0A0F1E;
+    --bg-card: rgba(255,255,255,0.05);
+    --bg-card-hover: rgba(255,255,255,0.08);
+    --border: rgba(255,255,255,0.10);
+    --border-bright: rgba(255,255,255,0.18);
+    --blue: #0A84FF;
+    --blue-light: #40A9FF;
+    --green: #30D158;
+    --red: #FF453A;
+    --orange: #FF9F0A;
+    --purple: #BF5AF2;
+    --pink: #FF375F;
+    --silver: #D1D1D6;
+    --text: #FFFFFF;
+    --text-muted: #8E8E93;
+    --text-dim: #636366;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --shadow-glow: 0 0 40px rgba(10,132,255,0.15);
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+font-family: ‘Poppins’, sans-serif;
+background: var(–bg-base);
+color: var(–text);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* BACKGROUND */
+body::before {
+content: ‘’;
+position: fixed; inset: 0;
+background:
+radial-gradient(ellipse 80% 60% at 20% 10%, rgba(10,84,255,0.18) 0%, transparent 60%),
+radial-gradient(ellipse 60% 50% at 80% 90%, rgba(48,209,88,0.10) 0%, transparent 60%),
+radial-gradient(ellipse 50% 40% at 60% 20%, rgba(191,90,242,0.08) 0%, transparent 50%),
+linear-gradient(160deg, #0A0F1E 0%, #050D1A 50%, #0A0F1E 100%);
+z-index: 0;
+pointer-events: none;
+}
+
+/* NAV */
+nav {
+position: sticky; top: 0; z-index: 100;
+background: rgba(10,15,30,0.8);
+backdrop-filter: blur(24px);
+border-bottom: 1px solid var(–border);
+padding: 0 20px;
+display: flex; align-items: center; justify-content: space-between;
+height: 60px;
+}
+
+.nav-logo {
+font-size: 16px; font-weight: 700; letter-spacing: -0.5px;
+background: linear-gradient(135deg, #fff 0%, var(–blue-light) 100%);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.nav-tabs {
+display: flex; gap: 4px;
+overflow-x: auto; scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+
+.nav-tab {
+padding: 7px 14px;
+border-radius: 10px;
+font-size: 13px; font-weight: 500;
+color: var(–text-muted);
+cursor: pointer; border: none; background: none;
+white-space: nowrap;
+transition: all 0.2s;
+}
+.nav-tab:hover { color: var(–text); background: var(–bg-card); }
+.nav-tab.active {
+color: var(–text);
+background: linear-gradient(135deg, rgba(10,132,255,0.3), rgba(10,132,255,0.15));
+border: 1px solid rgba(10,132,255,0.4);
+}
+
+.nav-avatar {
+width: 34px; height: 34px; border-radius: 50%;
+background: linear-gradient(135deg, var(–blue), var(–purple));
+display: flex; align-items: center; justify-content: center;
+font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+
+/* MAIN */
+main { position: relative; z-index: 1; padding: 24px 16px 100px; max-width: 480px; margin: 0 auto; }
+
+/* SECTIONS */
+.section { display: none; }
+.section.active { display: block; }
+
+/* CARD */
+.card {
+background: var(–bg-card);
+backdrop-filter: blur(20px);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 20px;
+box-shadow: var(–shadow);
+margin-bottom: 16px;
+transition: all 0.3s;
+animation: fadeUp 0.4s ease both;
+}
+.card:hover { border-color: var(–border-bright); box-shadow: var(–shadow), var(–shadow-glow); }
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(16px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.card-header {
+display: flex; justify-content: space-between; align-items: center;
+margin-bottom: 16px;
+}
+.card-title { font-size: 13px; font-weight: 600; color: var(–text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+.card-value { font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+.card-sub { font-size: 12px; color: var(–text-muted); margin-top: 2px; }
+
+/* SCORE BADGE */
+.score-badge {
+width: 44px; height: 44px; border-radius: 12px;
+display: flex; align-items: center; justify-content: center;
+font-size: 18px; font-weight: 800;
+}
+
+/* RADAR SECTION */
+.radar-wrap { position: relative; width: 100%; height: 240px; }
+
+/* SLIDERS */
+.score-sliders { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.score-row {
+display: grid; grid-template-columns: 80px 1fr 36px;
+align-items: center; gap: 10px;
+}
+.score-label { font-size: 12px; color: var(–text-muted); font-weight: 500; }
+.score-track {
+-webkit-appearance: none; appearance: none;
+height: 6px; border-radius: 99px;
+outline: none; cursor: pointer; width: 100%;
+}
+.score-track::-webkit-slider-thumb {
+-webkit-appearance: none;
+width: 18px; height: 18px; border-radius: 50%;
+background: #fff;
+box-shadow: 0 0 10px rgba(10,132,255,0.6);
+cursor: pointer;
+}
+.score-num { font-size: 13px; font-weight: 700; text-align: right; font-family: ‘Space Mono’, monospace; }
+
+/* MONEY CARD */
+.money-card {
+background: linear-gradient(135deg, #0A1F44, #0d2a5e);
+border: 1px solid rgba(10,132,255,0.3);
+position: relative; overflow: hidden;
+}
+.money-card::before {
+content: ‘’;
+position: absolute; top: -40px; right: -40px;
+width: 160px; height: 160px; border-radius: 50%;
+background: radial-gradient(circle, rgba(10,132,255,0.2), transparent 70%);
+}
+.money-amount { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; font-family: ‘Space Mono’, monospace; }
+.money-delta {
+display: inline-flex; align-items: center; gap: 4px;
+font-size: 12px; font-weight: 600; padding: 3px 8px;
+border-radius: 99px; margin-top: 4px;
+}
+.delta-pos { background: rgba(48,209,88,0.2); color: var(–green); }
+.delta-neg { background: rgba(255,69,58,0.2); color: var(–red); }
+
+/* TRANSACTIONS */
+.tx-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.tx-item {
+display: flex; align-items: center; gap: 12px;
+padding: 10px 12px; border-radius: 12px;
+background: rgba(255,255,255,0.04);
+border: 1px solid var(–border);
+}
+.tx-icon {
+width: 36px; height: 36px; border-radius: 10px;
+display: flex; align-items: center; justify-content: center;
+font-size: 16px; flex-shrink: 0;
+}
+.tx-info { flex: 1; }
+.tx-name { font-size: 13px; font-weight: 500; }
+.tx-date { font-size: 11px; color: var(–text-muted); }
+.tx-amount { font-size: 14px; font-weight: 700; font-family: ‘Space Mono’, monospace; }
+
+/* FORM */
+.add-form {
+display: flex; gap: 8px; margin-top: 12px;
+flex-wrap: wrap;
+}
+.add-form input, .add-form select {
+flex: 1; min-width: 0;
+background: rgba(255,255,255,0.07);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 10px 12px;
+color: var(–text); font-family: ‘Poppins’, sans-serif; font-size: 13px;
+outline: none;
+transition: border 0.2s;
+}
+.add-form input::placeholder { color: var(–text-dim); }
+.add-form input:focus, .add-form select:focus { border-color: var(–blue); }
+.add-form select option { background: #1C1C1E; }
+
+/* BUTTONS */
+.btn {
+padding: 10px 18px; border-radius: 10px; border: none;
+font-family: ‘Poppins’, sans-serif; font-size: 13px; font-weight: 600;
+cursor: pointer; transition: all 0.2s;
+}
+.btn-primary {
+background: linear-gradient(135deg, #0A84FF, #005AC8);
+color: #fff;
+box-shadow: 0 4px 15px rgba(10,132,255,0.35);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(10,132,255,0.5); }
+.btn-primary:active { transform: translateY(0); }
+.btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
+.btn-ghost {
+background: rgba(255,255,255,0.07);
+color: var(–text);
+border: 1px solid var(–border);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.12); }
+.btn-danger { background: rgba(255,69,58,0.2); color: var(–red); border: 1px solid rgba(255,69,58,0.3); }
+
+/* HABIT TRACKER */
+.habit-grid-wrap { overflow-x: auto; padding-bottom: 4px; }
+.habit-table { width: 100%; border-collapse: collapse; }
+.habit-table th {
+font-size: 9px; color: var(–text-dim); font-weight: 600;
+padding: 2px; text-align: center;
+min-width: 22px;
+}
+.habit-row-label {
+font-size: 11px; font-weight: 600; color: var(–text-muted);
+padding-right: 8px; white-space: nowrap; width: 80px;
+}
+.habit-cell {
+width: 22px; height: 22px; border-radius: 5px;
+cursor: pointer; border: none;
+margin: 1px;
+transition: all 0.15s;
+display: block;
+}
+.habit-cell-wrap { padding: 2px; }
+.habit-cell.done { opacity: 1; }
+.habit-cell.empty { background: rgba(255,255,255,0.08); }
+.habit-cell:hover { transform: scale(1.2); z-index: 1; position: relative; }
+.habit-cell.future { opacity: 0.3; cursor: not-allowed; }
+
+.streak-badge {
+display: inline-flex; align-items: center; gap: 4px;
+background: rgba(255,159,10,0.2); color: var(–orange);
+padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600;
+}
+
+.habit-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+/* LIFE SECTIONS */
+.life-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.life-item {
+padding: 14px;
+background: rgba(255,255,255,0.04);
+border: 1px solid var(–border);
+border-radius: 14px;
+transition: all 0.2s;
+}
+.life-item:hover { background: rgba(255,255,255,0.07); }
+.life-item-label { font-size: 10px; color: var(–text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.life-item-val {
+font-size: 13px; font-weight: 500; color: var(–text);
+outline: none; background: none; border: none;
+width: 100%; font-family: ‘Poppins’, sans-serif;
+resize: none;
+}
+.life-item-val:focus { color: #fff; }
+.life-item-val::placeholder { color: var(–text-dim); }
+
+/* EMOTION */
+.emotion-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+.emotion-btn {
+padding: 6px 12px; border-radius: 99px;
+font-size: 13px; cursor: pointer; border: none;
+background: rgba(255,255,255,0.07);
+transition: all 0.2s;
+}
+.emotion-btn.selected { transform: scale(1.1); }
+.emotion-btn:hover { transform: scale(1.05); }
+
+/* ROUTINE */
+.routine-grid { display: flex; flex-direction: column; gap: 10px; }
+.routine-item {
+display: flex; align-items: center; gap: 14px;
+padding: 14px 16px; border-radius: 14px;
+background: rgba(255,255,255,0.04);
+border: 1px solid var(–border);
+cursor: pointer; transition: all 0.2s;
+}
+.routine-item:hover { background: rgba(255,255,255,0.07); }
+.routine-item.done { border-color: rgba(48,209,88,0.4); background: rgba(48,209,88,0.08); }
+.routine-icon { font-size: 22px; width: 32px; text-align: center; }
+.routine-name { flex: 1; font-size: 14px; font-weight: 500; }
+.routine-check {
+width: 24px; height: 24px; border-radius: 50%;
+border: 2px solid var(–border);
+display: flex; align-items: center; justify-content: center;
+font-size: 13px; transition: all 0.2s;
+}
+.routine-item.done .routine-check { background: var(–green); border-color: var(–green); }
+
+/* SECTION HEADER */
+.section-hero {
+margin-bottom: 20px;
+animation: fadeUp 0.3s ease both;
+}
+.section-hero h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.8px; }
+.section-hero p { font-size: 13px; color: var(–text-muted); margin-top: 4px; }
+
+/* TAG CHIP */
+.chip {
+display: inline-flex; align-items: center; gap: 4px;
+padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600;
+}
+
+/* CHART SMALL */
+.chart-mini { height: 80px; margin-top: 12px; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(–border); margin: 14px 0; }
+
+/* SCROLL X */
+.scroll-x { overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.scroll-x::-webkit-scrollbar { display: none; }
+
+/* PROGRESS BAR */
+.progress-bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,0.1); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; transition: width 0.4s; }
+
+/* EMPTY STATE */
+.empty { text-align: center; color: var(–text-dim); font-size: 13px; padding: 20px 0; }
+
+/* GLOW TAGS */
+.tag-blue { background: rgba(10,132,255,0.2); color: var(–blue-light); }
+.tag-green { background: rgba(48,209,88,0.2); color: var(–green); }
+.tag-red { background: rgba(255,69,58,0.2); color: var(–red); }
+.tag-orange { background: rgba(255,159,10,0.2); color: var(–orange); }
+.tag-purple { background: rgba(191,90,242,0.2); color: var(–purple); }
+
+/* FINANCIAL CHART */
+.finance-chart-wrap { height: 120px; margin-top: 16px; }
+
+/* MODAL */
+.modal-bg {
+position: fixed; inset: 0; z-index: 200;
+background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+display: flex; align-items: flex-end; justify-content: center;
+opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-bg.open { opacity: 1; pointer-events: all; }
+.modal {
+width: 100%; max-width: 480px;
+background: #13182B;
+border-radius: 24px 24px 0 0;
+padding: 24px 20px 40px;
+border-top: 1px solid var(–border-bright);
+transform: translateY(20px);
+transition: transform 0.3s;
+}
+.modal-bg.open .modal { transform: translateY(0); }
+.modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+
+.input-label { font-size: 11px; font-weight: 600; color: var(–text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.input-field {
+width: 100%;
+background: rgba(255,255,255,0.07);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 12px 14px;
+color: var(–text); font-family: ‘Poppins’, sans-serif; font-size: 14px;
+outline: none; margin-bottom: 14px;
+transition: border 0.2s;
+}
+.input-field:focus { border-color: var(–blue); }
+.input-field::placeholder { color: var(–text-dim); }
+
+.type-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+.type-btn {
+flex: 1; padding: 10px;
+border-radius: 10px; border: 1px solid var(–border);
+background: rgba(255,255,255,0.05);
+color: var(–text-muted); font-family: ‘Poppins’, sans-serif;
+font-size: 13px; font-weight: 600; cursor: pointer;
+transition: all 0.2s;
+}
+.type-btn.active-income { background: rgba(48,209,88,0.2); color: var(–green); border-color: rgba(48,209,88,0.4); }
+.type-btn.active-expense { background: rgba(255,69,58,0.2); color: var(–red); border-color: rgba(255,69,58,0.4); }
+
+/* TODAY INDICATOR */
+.today-dot {
+width: 6px; height: 6px; border-radius: 50%;
+background: var(–blue); display: inline-block; margin-left: 4px;
+animation: pulse 2s infinite;
+}
+@keyframes pulse {
+0%, 100% { opacity: 1; transform: scale(1); }
+50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* SOCIAL METER */
+.social-item { margin-bottom: 14px; }
+.social-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.social-name { font-size: 13px; font-weight: 600; }
+.social-score { font-size: 12px; color: var(–text-muted); font-family: ‘Space Mono’, monospace; }
+.social-note {
+font-size: 12px; color: var(–text-muted); margin-top: 4px;
+outline: none; border: none; background: none;
+width: 100%; font-family: ‘Poppins’, sans-serif;
+}
+.social-note::placeholder { color: var(–text-dim); }
+
+/* SECTION TABS */
+.inner-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.inner-tabs::-webkit-scrollbar { display: none; }
+.inner-tab {
+padding: 6px 14px; border-radius: 99px; border: 1px solid var(–border);
+background: none; color: var(–text-muted); font-family: ‘Poppins’, sans-serif;
+font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+transition: all 0.2s;
+}
+.inner-tab.active { background: rgba(10,132,255,0.2); color: var(–blue-light); border-color: rgba(10,132,255,0.4); }
+
+.inner-section { display: none; }
+.inner-section.active { display: block; }
+
+/* HABIT NAME EDITOR */
+.habit-name-input {
+background: none; border: none; color: var(–text-muted);
+font-family: ‘Poppins’, sans-serif; font-size: 11px; font-weight: 600;
+width: 80px; outline: none;
+}
+</style>
+
 </head>
+<body>
 
-<body style="font-family:sans-serif;text-align:center;margin-top:40px;">
+<!-- NAV -->
 
-<h1>Mon app personnelle</h1>
-<p>Site créé depuis mon iPhone</p>
+<nav>
+  <div class="nav-logo">⬡ Life OS</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showSection('finance')">Finance</button>
+    <button class="nav-tab" onclick="showSection('habits')">Habitudes</button>
+    <button class="nav-tab" onclick="showSection('vie')">Ma Vie</button>
+    <button class="nav-tab" onclick="showSection('routine')">Routine</button>
+  </div>
+  <div class="nav-avatar">Y</div>
+</nav>
+
+<main>
+
+<!-- ===== DASHBOARD ===== -->
+
+<section class="section active" id="section-dashboard">
+  <div class="section-hero">
+    <h1>Dashboard <span class="today-dot"></span></h1>
+    <p id="date-display" style="font-size:13px;color:var(--text-muted);margin-top:4px;"></p>
+  </div>
+
+  <!-- GLOBAL SCORE -->
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Score Global</div>
+        <div class="card-value" id="global-score">0</div>
+        <div class="card-sub">/ 100 — <span id="score-label">En calcul...</span></div>
+      </div>
+      <div class="score-badge" id="score-emoji" style="background:rgba(10,132,255,0.2);font-size:28px;">⚡</div>
+    </div>
+    <div class="radar-wrap">
+      <canvas id="radarChart"></canvas>
+    </div>
+    <div class="score-sliders" id="sliders-container"></div>
+  </div>
+
+  <!-- MONEY SUMMARY -->
+
+  <div class="card money-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title" style="color:rgba(255,255,255,0.5)">Solde actuel</div>
+        <div class="money-amount" id="dash-balance">0 €</div>
+        <div id="dash-delta" class="money-delta delta-pos" style="margin-top:8px;">+0 € ce mois</div>
+      </div>
+      <div style="font-size:40px">💳</div>
+    </div>
+    <div class="chart-mini">
+      <canvas id="miniFinanceChart"></canvas>
+    </div>
+  </div>
+
+  <!-- TODAY HABITS SUMMARY -->
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Habitudes aujourd'hui</div>
+      <span id="habit-today-count" class="chip tag-green">0/6</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="habit-today-bar" style="width:0%;background:linear-gradient(90deg,var(--green),var(--blue));"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;" id="habit-today-chips"></div>
+  </div>
+
+  <!-- ROUTINE SUMMARY -->
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Routine du jour</div>
+      <span id="routine-dash-count" class="chip tag-blue">0/6</span>
+    </div>
+    <div class="progress-bar" style="margin-top:0">
+      <div class="progress-fill" id="routine-dash-bar" style="width:0%;background:linear-gradient(90deg,var(--blue),var(--purple));"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINANCE ===== -->
+
+<section class="section" id="section-finance">
+  <div class="section-hero">
+    <h1>Finance 💰</h1>
+    <p>Gérer ton argent facilement</p>
+  </div>
+
+  <div class="card money-card">
+    <div class="card-title" style="color:rgba(255,255,255,0.5);margin-bottom:8px">Solde total</div>
+    <div class="money-amount" id="finance-balance">0 €</div>
+    <div style="display:flex;gap:10px;margin-top:12px;">
+      <div>
+        <div style="font-size:10px;color:var(--green);font-weight:600;letter-spacing:0.5px">REVENUS</div>
+        <div style="font-size:16px;font-weight:700;color:var(--green);font-family:'Space Mono',monospace" id="total-income">0 €</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,0.1)"></div>
+      <div>
+        <div style="font-size:10px;color:var(--red);font-weight:600;letter-spacing:0.5px">DÉPENSES</div>
+        <div style="font-size:16px;font-weight:700;color:var(--red);font-family:'Space Mono',monospace" id="total-expense">0 €</div>
+      </div>
+    </div>
+    <div class="finance-chart-wrap">
+      <canvas id="financeChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ADD TRANSACTION -->
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:14px">Ajouter une transaction</div>
+    <div class="type-toggle">
+      <button class="type-btn active-income" id="btn-income" onclick="setTxType('income')">+ Revenu</button>
+      <button class="type-btn" id="btn-expense" onclick="setTxType('expense')">− Dépense</button>
+    </div>
+    <div class="input-label">Description</div>
+    <input class="input-field" id="tx-name" placeholder="Ex: Salaire, Courses...">
+    <div class="input-label">Montant (€)</div>
+    <input class="input-field" id="tx-amount" type="number" placeholder="0.00">
+    <button class="btn btn-primary" style="width:100%" onclick="addTransaction()">Ajouter</button>
+  </div>
+
+  <!-- HISTORY -->
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Historique</div>
+      <button class="btn btn-ghost btn-sm" onclick="clearTransactions()">Effacer tout</button>
+    </div>
+    <div class="tx-list" id="tx-list">
+      <div class="empty">Aucune transaction pour l'instant</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HABITS ===== -->
+
+<section class="section" id="section-habits">
+  <div class="section-hero">
+    <h1>Habitudes 🔥</h1>
+    <p id="habits-month-label">Mois en cours</p>
+  </div>
+  <div id="habits-container"></div>
+</section>
+
+<!-- ===== VIE ===== -->
+
+<section class="section" id="section-vie">
+  <div class="section-hero">
+    <h1>Ma Vie 🌱</h1>
+    <p>Toutes tes sphères de vie</p>
+  </div>
+
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="showInner('corps', this)">💪 Corps</button>
+    <button class="inner-tab" onclick="showInner('esprit', this)">🧠 Esprit</button>
+    <button class="inner-tab" onclick="showInner('social', this)">❤️ Social</button>
+  </div>
+
+  <!-- CORPS -->
+
+  <div class="inner-section active" id="inner-corps">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">Apparence & Corps</div>
+      <div class="life-grid">
+        <div class="life-item">
+          <div class="life-item-label">✂️ Cheveux</div>
+          <textarea class="life-item-val" rows="2" placeholder="Coupe, état..." id="corps-cheveux"></textarea>
+        </div>
+        <div class="life-item">
+          <div class="life-item-label">✨ Peau</div>
+          <textarea class="life-item-val" rows="2" placeholder="Routine skin..." id="corps-peau"></textarea>
+        </div>
+        <div class="life-item">
+          <div class="life-item-label">👔 Style</div>
+          <textarea class="life-item-val" rows="2" placeholder="Tendances..." id="corps-style"></textarea>
+        </div>
+        <div class="life-item">
+          <div class="life-item-label">💪 Physique</div>
+          <textarea class="life-item-val" rows="2" placeholder="Objectifs..." id="corps-physique"></textarea>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="input-label">Note générale corps</div>
+      <textarea class="input-field" rows="3" placeholder="Ressenti, objectifs semaine..." id="corps-note"></textarea>
+    </div>
+  </div>
+
+  <!-- ESPRIT -->
+
+  <div class="inner-section" id="inner-esprit">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">État Mental</div>
+      <div class="input-label">Émotion du moment</div>
+      <div class="emotion-grid" id="emotion-grid">
+        <button class="emotion-btn" onclick="selectEmotion(this)">😊 Bien</button>
+        <button class="emotion-btn" onclick="selectEmotion(this)">😤 Motivé</button>
+        <button class="emotion-btn" onclick="selectEmotion(this)">😴 Fatigué</button>
+        <button class="emotion-btn" onclick="selectEmotion(this)">😰 Stressé</button>
+        <button class="emotion-btn" onclick="selectEmotion(this)">😔 Bas</button>
+        <button class="emotion-btn" onclick="selectEmotion(this)">🔥 En feu</button>
+        <button class="emotion-btn" onclick="selectEmotion(this)">😐 Neutre</button>
+        <button class="emotion-btn" onclick="selectEmotion(this)">🧘 Serein</button>
+      </div>
+      <div class="divider"></div>
+      <div class="life-grid" style="margin-bottom:14px">
+        <div class="life-item">
+          <div class="life-item-label">🌍 État global</div>
+          <textarea class="life-item-val" rows="2" placeholder="Comment je me sens..." id="esprit-etat"></textarea>
+        </div>
+        <div class="life-item">
+          <div class="life-item-label">⚠️ Problème</div>
+          <textarea class="life-item-val" rows="2" placeholder="Ce qui me pèse..." id="esprit-pb"></textarea>
+        </div>
+      </div>
+      <div class="input-label">Ma routine mentale</div>
+      <textarea class="input-field" rows="3" placeholder="Méditation, journaling, lectures..." id="esprit-routine"></textarea>
+    </div>
+  </div>
+
+  <!-- SOCIAL -->
+
+  <div class="inner-section" id="inner-social">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px">Relations</div>
+
+```
+  <div class="social-item">
+    <div class="social-header">
+      <div class="social-name">💕 Copine</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="range" min="0" max="10" value="7" class="score-track" style="width:80px;background:linear-gradient(90deg,var(--pink) 70%,rgba(255,255,255,0.1) 70%)" id="social-copine-score" oninput="updateSocialBar(this,'social-copine-val',['var(--pink)','var(--pink)'])">
+        <span class="social-score" id="social-copine-val">7</span>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="bar-copine" style="width:70%;background:var(--pink)"></div></div>
+    <input class="social-note" placeholder="Note sur la relation..." id="note-copine">
+  </div>
+
+  <div class="social-item">
+    <div class="social-header">
+      <div class="social-name">👨‍👩‍👦 Famille</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="range" min="0" max="10" value="8" class="score-track" style="width:80px;background:linear-gradient(90deg,var(--orange) 80%,rgba(255,255,255,0.1) 80%)" id="social-famille-score" oninput="updateSocialBar(this,'social-famille-val',['var(--orange)'])">
+        <span class="social-score" id="social-famille-val">8</span>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="bar-famille" style="width:80%;background:var(--orange)"></div></div>
+    <input class="social-note" placeholder="Note famille..." id="note-famille">
+  </div>
+
+  <div class="social-item">
+    <div class="social-header">
+      <div class="social-name">👥 Amis</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="range" min="0" max="10" value="6" class="score-track" style="width:80px;background:linear-gradient(90deg,var(--blue) 60%,rgba(255,255,255,0.1) 60%)" id="social-amis-score" oninput="updateSocialBar(this,'social-amis-val',['var(--blue)'])">
+        <span class="social-score" id="social-amis-val">6</span>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="bar-amis" style="width:60%;background:var(--blue)"></div></div>
+    <input class="social-note" placeholder="Voir qui cette semaine..." id="note-amis">
+  </div>
+
+  <div class="divider"></div>
+  <div class="input-label">Proximité sociale globale</div>
+  <textarea class="input-field" rows="2" placeholder="Ressenti, besoins sociaux..." id="social-global"></textarea>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ===== ROUTINE ===== -->
+
+<section class="section" id="section-routine">
+  <div class="section-hero">
+    <h1>Routine ✅</h1>
+    <p>Check ton day</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Aujourd'hui</div>
+      <span class="chip tag-blue" id="routine-count">0/6</span>
+    </div>
+    <div class="progress-bar" style="margin-bottom:16px">
+      <div class="progress-fill" id="routine-bar" style="width:0%;background:linear-gradient(90deg,var(--blue),var(--purple))"></div>
+    </div>
+    <div class="routine-grid" id="routine-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">Note du jour</div>
+    <textarea class="input-field" rows="4" placeholder="Comment s'est passée ta journée ? Victoires, défis..." id="routine-note"></textarea>
+  </div>
+</section>
+
+</main>
+
+<!-- MODAL TRANSACTION (unused, inline form instead) -->
+
+<script>
+// ===========================
+// STATE
+// ===========================
+const state = {
+  scores: { esprit: 70, travail: 60, corps: 75, social: 65, sport: 55 },
+  transactions: [],
+  txType: 'income',
+  habits: [
+    { name: 'Sport', color: '#0A84FF', days: {} },
+    { name: 'NoFap', color: '#30D158', days: {} },
+    { name: 'Lecture', color: '#BF5AF2', days: {} },
+    { name: 'Travail', color: '#FF9F0A', days: {} },
+    { name: 'Langues', color: '#FF375F', days: {} },
+    { name: 'Eau', color: '#40C8FF', days: {} },
+  ],
+  routine: [
+    { name: 'Sport', icon: '🏋️', done: false },
+    { name: 'Code', icon: '💻', done: false },
+    { name: 'Travail', icon: '📚', done: false },
+    { name: 'Lecture', icon: '📖', done: false },
+    { name: 'Langues', icon: '🌍', done: false },
+    { name: 'Social', icon: '🤝', done: false },
+  ]
+};
+
+function saveState() {
+  try { localStorage.setItem('lifeOS', JSON.stringify(state)); } catch(e) {}
+}
+function loadState() {
+  try {
+    const s = localStorage.getItem('lifeOS');
+    if (s) {
+      const parsed = JSON.parse(s);
+      Object.assign(state, parsed);
+    }
+  } catch(e) {}
+}
+
+// ===========================
+// NAV
+// ===========================
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'dashboard') updateDashboard();
+  if (id === 'habits') renderHabits();
+  if (id === 'finance') updateFinance();
+  if (id === 'routine') renderRoutine();
+}
+
+function showInner(id, el) {
+  document.querySelectorAll('.inner-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('inner-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ===========================
+// DATE
+// ===========================
+const now = new Date();
+const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+document.getElementById('date-display').textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+// ===========================
+// RADAR CHART
+// ===========================
+const radarLabels = ['Esprit', 'Travail', 'Corps', 'Social', 'Sport'];
+const scoreKeys = ['esprit', 'travail', 'corps', 'social', 'sport'];
+const scoreColors = ['#BF5AF2', '#0A84FF', '#30D158', '#FF375F', '#FF9F0A'];
+const scoreEmojis = ['🧠', '💼', '💪', '❤️', '🏃'];
+
+let radarChart;
+function initRadar() {
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: radarLabels,
+      datasets: [{
+        data: scoreKeys.map(k => state.scores[k]),
+        backgroundColor: 'rgba(10,132,255,0.15)',
+        borderColor: 'rgba(10,132,255,0.8)',
+        borderWidth: 2,
+        pointBackgroundColor: scoreColors,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { display: false, stepSize: 25 },
+          grid: { color: 'rgba(255,255,255,0.1)' },
+          angleLines: { color: 'rgba(255,255,255,0.08)' },
+          pointLabels: {
+            color: '#D1D1D6', font: { family: 'Poppins', size: 11, weight: '600' }
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateRadar() {
+  if (!radarChart) return;
+  radarChart.data.datasets[0].data = scoreKeys.map(k => state.scores[k]);
+  radarChart.update('active');
+}
+
+// ===========================
+// SLIDERS
+// ===========================
+function initSliders() {
+  const container = document.getElementById('sliders-container');
+  container.innerHTML = '';
+  scoreKeys.forEach((key, i) => {
+    const val = state.scores[key];
+    const pct = val;
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    row.innerHTML = `
+      <div class="score-label">${scoreEmojis[i]} ${radarLabels[i]}</div>
+      <input type="range" min="0" max="100" value="${val}" class="score-track" id="slider-${key}"
+        style="background:linear-gradient(90deg,${scoreColors[i]} ${pct}%,rgba(255,255,255,0.1) ${pct}%)"
+        oninput="onSlider('${key}',this,${i})">
+      <div class="score-num" id="num-${key}" style="color:${scoreColors[i]}">${val}</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function onSlider(key, el, i) {
+  const val = parseInt(el.value);
+  state.scores[key] = val;
+  document.getElementById('num-' + key).textContent = val;
+  el.style.background = `linear-gradient(90deg,${scoreColors[i]} ${val}%,rgba(255,255,255,0.1) ${val}%)`;
+  updateRadar();
+  updateGlobalScore();
+  saveState();
+}
+
+function updateGlobalScore() {
+  const avg = Math.round(scoreKeys.reduce((s, k) => s + state.scores[k], 0) / scoreKeys.length);
+  document.getElementById('global-score').textContent = avg;
+  let label = avg >= 80 ? '🔥 Excellent' : avg >= 60 ? '✅ Bien' : avg >= 40 ? '⚡ Moyen' : '😴 À améliorer';
+  document.getElementById('score-label').textContent = label;
+  document.getElementById('score-emoji').textContent = avg >= 80 ? '🔥' : avg >= 60 ? '✅' : avg >= 40 ? '⚡' : '😴';
+}
+
+// ===========================
+// MINI FINANCE CHART (dashboard)
+// ===========================
+let miniChart;
+function initMiniChart() {
+  const ctx = document.getElementById('miniFinanceChart').getContext('2d');
+  miniChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: [], datasets: [{
+      data: [],
+      borderColor: 'rgba(10,132,255,0.8)',
+      backgroundColor: 'rgba(10,132,255,0.1)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.4,
+      pointRadius: 0,
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { display: false }, y: { display: false } }
+    }
+  });
+}
+
+function updateMiniChart() {
+  if (!miniChart) return;
+  const pts = getBalanceHistory();
+  miniChart.data.labels = pts.map((_,i) => i);
+  miniChart.data.datasets[0].data = pts;
+  miniChart.update();
+}
+
+// ===========================
+// FINANCE CHART
+// ===========================
+let financeChart;
+function initFinanceChart() {
+  const ctx = document.getElementById('financeChart').getContext('2d');
+  financeChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Revenus', data: [], backgroundColor: 'rgba(48,209,88,0.7)', borderRadius: 6 },
+        { label: 'Dépenses', data: [], backgroundColor: 'rgba(255,69,58,0.7)', borderRadius: 6 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#636366', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#636366', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+}
+
+function getBalanceHistory() {
+  let bal = 0;
+  const pts = [0];
+  state.transactions.slice().reverse().forEach(tx => {
+    bal += tx.type === 'income' ? tx.amount : -tx.amount;
+    pts.push(bal);
+  });
+  return pts;
+}
+
+function updateFinance() {
+  let income = 0, expense = 0;
+  state.transactions.forEach(tx => {
+    if (tx.type === 'income') income += tx.amount;
+    else expense += tx.amount;
+  });
+  const balance = income - expense;
+
+  document.getElementById('finance-balance').textContent = formatMoney(balance);
+  document.getElementById('total-income').textContent = formatMoney(income);
+  document.getElementById('total-expense').textContent = formatMoney(expense);
+
+  // Render transactions
+  const list = document.getElementById('tx-list');
+  if (state.transactions.length === 0) {
+    list.innerHTML = '<div class="empty">Aucune transaction</div>';
+  } else {
+    list.innerHTML = state.transactions.slice().reverse().map((tx, i) => {
+      const ri = state.transactions.length - 1 - i;
+      const icons = { income: '💰', expense: '💸' };
+      const col = tx.type === 'income' ? 'var(--green)' : 'var(--red)';
+      const sign = tx.type === 'income' ? '+' : '−';
+      return `<div class="tx-item">
+        <div class="tx-icon" style="background:rgba(${tx.type==='income'?'48,209,88':'255,69,58'},0.15)">${icons[tx.type]}</div>
+        <div class="tx-info">
+          <div class="tx-name">${tx.name}</div>
+          <div class="tx-date">${tx.date}</div>
+        </div>
+        <div class="tx-amount" style="color:${col}">${sign}${formatMoney(tx.amount)}</div>
+        <button style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;margin-left:4px" onclick="deleteTx(${ri})">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Finance chart (last 7 transactions grouped)
+  if (financeChart) {
+    const last7 = state.transactions.slice(-7);
+    financeChart.data.labels = last7.map(tx => tx.name.substring(0,6));
+    financeChart.data.datasets[0].data = last7.map(tx => tx.type === 'income' ? tx.amount : 0);
+    financeChart.data.datasets[1].data = last7.map(tx => tx.type === 'expense' ? tx.amount : 0);
+    financeChart.update();
+  }
+
+  updateDashboardMoney(balance, income, expense);
+  updateMiniChart();
+}
+
+function updateDashboardMoney(balance, income, expense) {
+  document.getElementById('dash-balance').textContent = formatMoney(balance);
+  const delta = income - expense;
+  const el = document.getElementById('dash-delta');
+  el.textContent = (delta >= 0 ? '+' : '') + formatMoney(delta) + ' ce mois';
+  el.className = 'money-delta ' + (delta >= 0 ? 'delta-pos' : 'delta-neg');
+}
+
+function formatMoney(n) {
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' €';
+}
+
+function setTxType(type) {
+  state.txType = type;
+  document.getElementById('btn-income').className = 'type-btn' + (type === 'income' ? ' active-income' : '');
+  document.getElementById('btn-expense').className = 'type-btn' + (type === 'expense' ? ' active-expense' : '');
+}
+
+function addTransaction() {
+  const name = document.getElementById('tx-name').value.trim();
+  const amount = parseFloat(document.getElementById('tx-amount').value);
+  if (!name || isNaN(amount) || amount <= 0) { alert('Remplis les champs correctement'); return; }
+  const d = new Date();
+  state.transactions.push({
+    name, amount, type: state.txType,
+    date: `${d.getDate()} ${months[d.getMonth()]}`
+  });
+  document.getElementById('tx-name').value = '';
+  document.getElementById('tx-amount').value = '';
+  updateFinance();
+  saveState();
+}
+
+function deleteTx(i) {
+  state.transactions.splice(i, 1);
+  updateFinance();
+  saveState();
+}
+
+function clearTransactions() {
+  if (confirm('Effacer tout l\'historique ?')) {
+    state.transactions = [];
+    updateFinance();
+    saveState();
+  }
+}
+
+// ===========================
+// HABITS
+// ===========================
+const habitColors = ['#0A84FF', '#30D158', '#BF5AF2', '#FF9F0A', '#FF375F', '#40C8FF'];
+
+function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
+
+function renderHabits() {
+  const y = now.getFullYear(), m = now.getMonth();
+  const days = getDaysInMonth(y, m);
+  const today = now.getDate();
+
+  document.getElementById('habits-month-label').textContent =
+    months[m].charAt(0).toUpperCase() + months[m].slice(1) + ' ' + y;
+
+  const container = document.getElementById('habits-container');
+  container.innerHTML = '';
+
+  state.habits.forEach((habit, hi) => {
+    // streak
+    let streak = 0;
+    for (let d = today; d >= 1; d--) {
+      if (habit.days[`${y}-${m}-${d}`]) streak++;
+      else break;
+    }
+    const done = Object.keys(habit.days).filter(k => habit.days[k] && k.startsWith(`${y}-${m}`)).length;
+    const pct = Math.round(done / days * 100);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.animationDelay = (hi * 0.07) + 's';
+
+    // Header row
+    const headerHTML = `
+      <div class="habit-meta">
+        <div style="width:12px;height:12px;border-radius:3px;background:${habit.color};flex-shrink:0"></div>
+        <input class="habit-name-input" value="${habit.name}" style="color:${habit.color}" 
+          onchange="renameHabit(${hi},this.value)">
+        <div style="flex:1"></div>
+        ${streak > 0 ? `<div class="streak-badge">🔥 ${streak}j</div>` : ''}
+        <span style="font-size:11px;color:var(--text-dim);margin-left:6px">${done}/${days}</span>
+      </div>
+      <div class="progress-bar" style="margin-bottom:10px">
+        <div class="progress-fill" style="width:${pct}%;background:${habit.color}"></div>
+      </div>
+    `;
+
+    // Grid header (day numbers)
+    let gridHTML = '<div class="habit-grid-wrap"><table class="habit-table"><thead><tr><th></th>';
+    for (let d = 1; d <= days; d++) {
+      gridHTML += `<th>${d}</th>`;
+    }
+    gridHTML += '</tr></thead><tbody><tr><td></td>';
+
+    for (let d = 1; d <= days; d++) {
+      const key = `${y}-${m}-${d}`;
+      const isDone = !!habit.days[key];
+      const isFuture = d > today;
+      const cellClass = isFuture ? 'habit-cell future' : (isDone ? 'habit-cell done' : 'habit-cell empty');
+      const bg = isDone ? habit.color : (isFuture ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)');
+      const clickFn = isFuture ? '' : `onclick="toggleHabit(${hi},'${key}',this)"`;
+      gridHTML += `<td class="habit-cell-wrap">
+        <button class="${cellClass}" style="background:${bg};width:22px;height:22px" ${clickFn} title="Jour ${d}"></button>
+      </td>`;
+    }
+    gridHTML += '</tr></tbody></table></div>';
+
+    card.innerHTML = headerHTML + gridHTML;
+    container.appendChild(card);
+  });
+
+  updateHabitDashboard();
+}
+
+function toggleHabit(hi, key, el) {
+  const habit = state.habits[hi];
+  if (habit.days[key]) {
+    delete habit.days[key];
+    el.style.background = 'rgba(255,255,255,0.08)';
+    el.classList.remove('done'); el.classList.add('empty');
+  } else {
+    habit.days[key] = true;
+    el.style.background = habit.color;
+    el.classList.remove('empty'); el.classList.add('done');
+  }
+  renderHabits();
+  saveState();
+}
+
+function renameHabit(i, name) {
+  state.habits[i].name = name;
+  saveState();
+}
+
+function updateHabitDashboard() {
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  let done = 0;
+  const chips = document.getElementById('habit-today-chips');
+  if (!chips) return;
+  chips.innerHTML = '';
+  state.habits.forEach((habit, i) => {
+    const key = `${y}-${m}-${d}`;
+    const isDone = !!habit.days[key];
+    if (isDone) done++;
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.style.background = isDone ? habit.color + '33' : 'rgba(255,255,255,0.07)';
+    chip.style.color = isDone ? habit.color : 'var(--text-dim)';
+    chip.style.border = isDone ? `1px solid ${habit.color}55` : '1px solid var(--border)';
+    chip.style.fontSize = '11px';
+    chip.textContent = (isDone ? '✓ ' : '') + habit.name;
+    chips.appendChild(chip);
+  });
+  const total = state.habits.length;
+  document.getElementById('habit-today-count').textContent = `${done}/${total}`;
+  document.getElementById('habit-today-bar').style.width = (done / total * 100) + '%';
+}
+
+// ===========================
+// ROUTINE
+// ===========================
+function renderRoutine() {
+  const grid = document.getElementById('routine-grid');
+  grid.innerHTML = '';
+  let done = 0;
+  state.routine.forEach((item, i) => {
+    if (item.done) done++;
+    const el = document.createElement('div');
+    el.className = 'routine-item' + (item.done ? ' done' : '');
+    el.onclick = () => toggleRoutine(i);
+    el.innerHTML = `
+      <div class="routine-icon">${item.icon}</div>
+      <div class="routine-name">${item.name}</div>
+      <div class="routine-check">${item.done ? '✓' : ''}</div>
+    `;
+    grid.appendChild(el);
+  });
+  const total = state.routine.length;
+  document.getElementById('routine-count').textContent = `${done}/${total}`;
+  document.getElementById('routine-bar').style.width = (done / total * 100) + '%';
+  updateRoutineDash(done, total);
+}
+
+function toggleRoutine(i) {
+  state.routine[i].done = !state.routine[i].done;
+  renderRoutine();
+  saveState();
+}
+
+function updateRoutineDash(done, total) {
+  const el = document.getElementById('routine-dash-count');
+  const bar = document.getElementById('routine-dash-bar');
+  if (el) el.textContent = `${done}/${total}`;
+  if (bar) bar.style.width = (done / total * 100) + '%';
+}
+
+// ===========================
+// VIE - SOCIAL
+// ===========================
+function updateSocialBar(slider, valId, colors) {
+  const val = slider.value;
+  document.getElementById(valId).textContent = val;
+  const key = valId.replace('social-','').replace('-val','');
+  const bar = document.getElementById('bar-' + key);
+  if (bar) bar.style.width = (val * 10) + '%';
+  const pct = val * 10;
+  slider.style.background = `linear-gradient(90deg,${colors[0]} ${pct}%,rgba(255,255,255,0.1) ${pct}%)`;
+}
+
+// ===========================
+// EMOTIONS
+// ===========================
+function selectEmotion(btn) {
+  document.querySelectorAll('.emotion-btn').forEach(b => {
+    b.classList.remove('selected');
+    b.style.background = 'rgba(255,255,255,0.07)';
+    b.style.border = '1px solid var(--border)';
+  });
+  btn.classList.add('selected');
+  btn.style.background = 'rgba(10,132,255,0.2)';
+  btn.style.border = '1px solid rgba(10,132,255,0.4)';
+}
+
+// ===========================
+// DASHBOARD UPDATE
+// ===========================
+function updateDashboard() {
+  updateGlobalScore();
+  updateHabitDashboard();
+  let income = 0, expense = 0;
+  state.transactions.forEach(tx => {
+    if (tx.type === 'income') income += tx.amount;
+    else expense += tx.amount;
+  });
+  updateDashboardMoney(income - expense, income, expense);
+  updateMiniChart();
+
+  let routDone = state.routine.filter(r => r.done).length;
+  updateRoutineDash(routDone, state.routine.length);
+}
+
+// ===========================
+// PERSISTENCE - LIFE FIELDS
+// ===========================
+const lifeFields = ['corps-cheveux','corps-peau','corps-style','corps-physique','corps-note',
+  'esprit-etat','esprit-pb','esprit-routine','note-copine','note-famille','note-amis','social-global','routine-note'];
+
+function saveLifeFields() {
+  lifeFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (!state.lifeData) state.lifeData = {};
+      state.lifeData[id] = el.value;
+    }
+  });
+  saveState();
+}
+
+function loadLifeFields() {
+  if (!state.lifeData) return;
+  lifeFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && state.lifeData[id]) el.value = state.lifeData[id];
+  });
+}
+
+// ===========================
+// INIT
+// ===========================
+loadState();
+initRadar();
+initSliders();
+updateGlobalScore();
+initMiniChart();
+initFinanceChart();
+updateFinance();
+renderRoutine();
+updateHabitDashboard();
+
+// Lazy load life fields
+setTimeout(() => {
+  loadLifeFields();
+  lifeFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', saveLifeFields);
+  });
+}, 300);
+
+// Slider state restore
+scoreKeys.forEach((key, i) => {
+  const el = document.getElementById('slider-' + key);
+  if (el) {
+    el.value = state.scores[key];
+    el.style.background = `linear-gradient(90deg,${scoreColors[i]} ${state.scores[key]}%,rgba(255,255,255,0.1) ${state.scores[key]}%)`;
+    document.getElementById('num-' + key).textContent = state.scores[key];
+  }
+});
+updateRadar();
+
+// Social bar sync on load
+const socialSliders = [
+  ['social-copine-score','social-copine-val','bar-copine','var(--pink)'],
+  ['social-famille-score','social-famille-val','bar-famille','var(--orange)'],
+  ['social-amis-score','social-amis-val','bar-amis','var(--blue)'],
+];
+socialSliders.forEach(([sid, vid, bid, color]) => {
+  const el = document.getElementById(sid);
+  if (el) {
+    const val = el.value;
+    document.getElementById(vid).textContent = val;
+    const bar = document.getElementById(bid);
+    if (bar) bar.style.width = (val * 10) + '%';
+    el.style.background = `linear-gradient(90deg,${color} ${val*10}%,rgba(255,255,255,0.1) ${val*10}%)`;
+  }
+});
+</script>
 
 </body>
 </html>
